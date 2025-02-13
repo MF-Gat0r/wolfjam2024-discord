@@ -84,46 +84,46 @@ public class CmdCooldown : MonoBehaviour
 
     }
 
-    public void OnChatMessage(string pChatter, string pMessage)
-    {
-        //check the command
-        if (pMessage.Contains("!cmd") && canUseTest)
-        {
-            canUseTest = false;
-            testCooldownTime = _timeTilNextTest;
-        }
-        else if (pMessage.Contains("!cmd") && !canUseTest)
-        {
-            print("cant use");
-        }
-        //check the command
-        else if (pMessage.Contains("!shoot") && canUseShoot)
-        {
-            bulletManager.OnFire();
-            shootCooldownTime = _timeTilNextShoot;
-            canUseShoot = false;
-        }
-        else if (pMessage.Contains("!shoot") && !canUseShoot)
-        {
-            print("cant use");
-        }
-        //check the command
-        else if (pMessage.Contains("!switch") && canUseSwitch)
-        {
-            bulletManager.OnSwitch();
-            switchCooldownTime = _timeTilNextSwitch;
-            canUseSwitch = false;
-        }
-        else if (pMessage.Contains("!switch") && !canUseSwitch)
-        {
-            print("cant use");
-        }
+    //public void OnChatMessage(string pChatter, string pMessage)
+    //{
+    //    //check the command
+    //    if (pMessage.Contains("!cmd") && canUseTest)
+    //    {
+    //        canUseTest = false;
+    //        testCooldownTime = _timeTilNextTest;
+    //    }
+    //    else if (pMessage.Contains("!cmd") && !canUseTest)
+    //    {
+    //        print("cant use");
+    //    }
+    //    //check the command
+    //    else if (pMessage.Contains("!shoot") && canUseShoot)
+    //    {
+    //        bulletManager.OnFire();
+    //        shootCooldownTime = _timeTilNextShoot;
+    //        canUseShoot = false;
+    //    }
+    //    else if (pMessage.Contains("!shoot") && !canUseShoot)
+    //    {
+    //        print("cant use");
+    //    }
+    //    //check the command
+    //    else if (pMessage.Contains("!switch") && canUseSwitch)
+    //    {
+    //        bulletManager.OnSwitch();
+    //        switchCooldownTime = _timeTilNextSwitch;
+    //        canUseSwitch = false;
+    //    }
+    //    else if (pMessage.Contains("!switch") && !canUseSwitch)
+    //    {
+    //        print("cant use");
+    //    }
 
-
+    //to be refactored since, now it will be a refil feature
 
     }
 
-
+    //code for commands
     public bool CanShoot()
     {
         return canUseShoot;

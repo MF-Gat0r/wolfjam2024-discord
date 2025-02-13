@@ -8,7 +8,7 @@ using System.Globalization;
 /// <summary>
 /// Name: Twitch Connect
 /// Purpose: Connect to specfied streamer's twitch chat and read chatlogs to parge commands
-/// Author(s): Katie Hellmann, PabloMakes Twitch Integration Tutorial
+/// Author(s): Katie Hellmann, Gator Flack PabloMakes Twitch Integration Tutorial
 /// </summary>
 public class TwitchConnect : MonoBehaviour
 {
@@ -23,10 +23,10 @@ public class TwitchConnect : MonoBehaviour
     const string URL = "irc.chat.twitch.tv";
     const int PORT = 6667;
 
-    private string user = "k8ii3";
-    //from twitchapps.com/tmi (pls dont hack me)
-    private string oauth = "oauth:9o3kqvmifwks7z7eb1w5rdklxlt9v1";
-    private string channel = "k8ii3";
+    private string user = user_name;
+    //from twitchapps.com/tmi
+    private string oauth = oauth_token;
+    private string channel = channel_name;
 
     /// <summary>
     /// A function to Connect to Twitch
