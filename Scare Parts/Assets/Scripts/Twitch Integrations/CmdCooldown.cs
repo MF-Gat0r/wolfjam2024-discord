@@ -6,135 +6,75 @@ using UnityEngine;
 /// <summary>
 /// Name: Cmd Coldown
 /// Purpose: Set twitch command cooldowns to prevent event spamming and overloading the api
-/// Author(s): Katie Hellmann, GucioDevs Unity3D Quick Tips: Cooldown Timers
+/// Author(s): Katie Hellmann, GucioDevs Unity3D Quick Tips: Cooldown Timers, Gator Flack
 /// </summary>
 
 public class CmdCooldown : MonoBehaviour
 {
-    [SerializeField] BulletManager bulletManager;
-    private float shootCooldownTime;
-    private float switchCooldownTime;
-    private float testCooldownTime;
-    [SerializeField] private float _timeTilNextShoot = 5;
-    [SerializeField] private float _timeTilNextSwitch = 5;
-    [SerializeField] private float _timeTilNextTest = 1000;
+    [SerializeField] private int maxBoostCount = 4; // The number of boosts needed before activation
+    [SerializeField] private float boostCooldownTime = 3f; // Cooldown per !boost usage
+    private int currentBoostCount = 0; // Tracks how many boosts have been used
+    private bool canUseBoost = true; 
 
-    private bool canUseShoot;
-    private bool canUseSwitch;
-    private bool canUseTest;
-
+    public event Action OnBoostMeterFilled; // Event triggered when boost meter is full
 
     private void Start()
     {
-        shootCooldownTime = 1;
-        switchCooldownTime = 1;
-        testCooldownTime = 1;
-
-        canUseShoot = true;
-        canUseTest = true;
-        canUseSwitch = true;
+        // Reset meter on start
+        currentBoostCount = 0;
     }
-    private void Update()
+
+    public void OnChatMessage(string pChatter, string pMessage)
     {
-        //this is redundant, would refactor later but just to ensure it works:
-    
-        if (shootCooldownTime > 0)
+        if (pMessage.Equals("!boost", StringComparison.OrdinalIgnoreCase))
         {
-            shootCooldownTime -= Time.deltaTime;
+            if (canUseBoost)
+            {
+                FillBoostMeter();
+            }
+            else
+            {
+                Debug.Log($"Boost is on cooldown! Please wait {boostCooldownTime} seconds.");
+            }
         }
-        if (shootCooldownTime < 0)
-        {
-            shootCooldownTime = 0;
-        }
-
-        if (switchCooldownTime > 0)
-        {
-            switchCooldownTime -= Time.deltaTime;
-        }
-        if (switchCooldownTime < 0)
-        {
-            switchCooldownTime = 0;
-        }
-
-
-        if (testCooldownTime > 0)
-        {
-            testCooldownTime -= Time.deltaTime;
-        }
-        if (testCooldownTime < 0)
-        {
-            testCooldownTime = 0;
-        }
-
-
-
-        if (shootCooldownTime <= 0)
-        {
-            canUseShoot = true;
-        }
-        if (testCooldownTime <= 0)
-        {
-            canUseTest = true;
-        }
-        if (switchCooldownTime <= 0)
-        {
-            canUseSwitch = true;
-        }
-
-
     }
 
-    //public void OnChatMessage(string pChatter, string pMessage)
-    //{
-    //    //check the command
-    //    if (pMessage.Contains("!cmd") && canUseTest)
-    //    {
-    //        canUseTest = false;
-    //        testCooldownTime = _timeTilNextTest;
-    //    }
-    //    else if (pMessage.Contains("!cmd") && !canUseTest)
-    //    {
-    //        print("cant use");
-    //    }
-    //    //check the command
-    //    else if (pMessage.Contains("!shoot") && canUseShoot)
-    //    {
-    //        bulletManager.OnFire();
-    //        shootCooldownTime = _timeTilNextShoot;
-    //        canUseShoot = false;
-    //    }
-    //    else if (pMessage.Contains("!shoot") && !canUseShoot)
-    //    {
-    //        print("cant use");
-    //    }
-    //    //check the command
-    //    else if (pMessage.Contains("!switch") && canUseSwitch)
-    //    {
-    //        bulletManager.OnSwitch();
-    //        switchCooldownTime = _timeTilNextSwitch;
-    //        canUseSwitch = false;
-    //    }
-    //    else if (pMessage.Contains("!switch") && !canUseSwitch)
-    //    {
-    //        print("cant use");
-    //    }
-
-    //to be refactored since, now it will be a refil feature
-
-    }
-
-    //code for commands
-    public bool CanShoot()
+    /// Adds to the boost meter and checks if the meter is full.
+    private void FillBoostMeter()
     {
-        return canUseShoot;
-    }
-    public bool CanSwitch()
-    {
-        return canUseSwitch;
-    }
-    public bool CanTest()
-    {
-        return canUseTest;
+        currentBoostCount++;
+        canUseBoost = false; // Temporarily disable boosting to prevent spam
+        Debug.Log($"Boost used! ({currentBoostCount}/{maxBoostCount})");
+
+        if (currentBoostCount >= maxBoostCount)
+        {
+            ActivateBoost();
+            currentBoostCount = 0; // Reset meter
+        }
+
+        StartCoroutine(ResetBoostCooldown());
     }
 
+    private void ActivateBoost()
+    {
+        Debug.Log("BOOST ACTIVATED!");
+        OnBoostMeterFilled?.Invoke(); // Trigger for event 
+    }
+    /// Waits for cooldown before allowing another !boost command.
+
+    private IEnumerator ResetBoostCooldown()
+    {
+        yield return new WaitForSeconds(boostCooldownTime);
+        canUseBoost = true;
+    }
+
+    /// Allows the streamer to modify the required boosts dynamically.
+    public void SetBoostRequirement(int newRequirement)
+    {
+        if (newRequirement > 0)
+        {
+            maxBoostCount = newRequirement;
+            Debug.Log($"Boost requirement updated! Now takes {maxBoostCount} boosts to activate.");
+        }
+    }
 }

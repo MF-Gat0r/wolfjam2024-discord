@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,37 +13,78 @@ using System.Globalization;
 /// </summary>
 public class TwitchConnect : MonoBehaviour
 {
-    //call this event to check for commands
-    public UnityEvent<string, string> OnChatMessage;
-    TcpClient TwitchTV;
-    StreamReader Reader;
-    StreamWriter Writer;
+    private TcpClient twitchClient;
+    private StreamReader reader;
+    private StreamWriter writer;
+    private float pingCounter = 0f;
 
-    //internet things
-    private float pingCounter = 0;
-    const string URL = "irc.chat.twitch.tv";
-    const int PORT = 6667;
+    public InputField usernameInput;
+    public InputField channelInput;
+    public InputField oauthInput;
+    public Button connectButton;
 
-    private string user = user_name;
-    //from twitchapps.com/tmi
-    private string oauth = oauth_token;
-    private string channel = channel_name;
+    private string username;
+    private string channelName;
+    private string oauthToken;
 
-    /// <summary>
-    /// A function to Connect to Twitch
-    /// </summary>
-    private void ConnectToTwitch()
+    public event Action<string, string> OnChatMessage;
+    void Start()
     {
-        TwitchTV = new TcpClient(URL, PORT);
-        Reader = new StreamReader(TwitchTV.GetStream());
-        Writer = new StreamWriter(TwitchTV.GetStream());
-
-        Writer.WriteLine("PASS " + oauth);
-        Writer.WriteLine("NICK " + user.ToLower());
-        Writer.WriteLine("JOIN #" + channel.ToLower());
-        Writer.Flush();
+        connectButton.onClick.AddListener(InitializeTwitchConnection);
     }
 
+    void InitializeTwitchConnection()
+    {
+        username = usernameInput.text.Trim();
+        channelName = channelInput.text.Trim();
+        oauthToken = oauthInput.text.Trim();
+
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(channelName) || string.IsNullOrEmpty(oauthToken))
+        {
+            Debug.LogError("Please enter valid Twitch credentials.");
+            return;
+        }
+
+        ConnectToTwitch();
+    }
+
+    void ConnectToTwitch()
+    {
+        try
+        {
+            twitchClient = new TcpClient("irc.chat.twitch.tv", 6667);
+            reader = new StreamReader(twitchClient.GetStream());
+            writer = new StreamWriter(twitchClient.GetStream()) { AutoFlush = true };
+
+            // Authenticate using inputted credentials
+            writer.WriteLine($"PASS {oauthToken}");
+            writer.WriteLine($"NICK {username}");
+            writer.WriteLine($"JOIN #{channelName}");
+
+            Debug.Log("Connected to Twitch Chat!");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Failed to connect to Twitch: " + e.Message);
+        }
+    }
+
+    void Update()
+    {
+        if (twitchClient == null || !twitchClient.Connected)
+        {
+            return;
+        }
+        pingCounter += Time.deltaTime;
+        if (pingCounter > 60) // Send PING every 60 seconds ( Can be changed )
+        {
+            writer.WriteLine("PING :tmi.twitch.tv");
+            writer.Flush();
+            pingCounter = 0;
+        }
+
+        ReadChat();
+    }
     private void Awake()
     {
         ConnectToTwitch();
@@ -52,7 +94,7 @@ public class TwitchConnect : MonoBehaviour
     {
         pingCounter += Time.deltaTime; //count time
         //constantly reconnect
-        if (pingCounter > 60) 
+        if (pingCounter > 60)
         {
             Writer.WriteLine("PING " + URL);
             Writer.Flush();
@@ -67,10 +109,10 @@ public class TwitchConnect : MonoBehaviour
         if (TwitchTV.Available > 0)
         {
             string message = Reader.ReadLine();
-            if(message.Contains("PRIVMSG"))
+            if (message.Contains("PRIVMSG"))
             {
                 int splitPoint = message.IndexOf("!");
-                string chatter = message.Substring(1, splitPoint -1);
+                string chatter = message.Substring(1, splitPoint - 1);
                 splitPoint = message.IndexOf(":", 1);
                 string msg = message.Substring(splitPoint + 1);
 
@@ -80,6 +122,22 @@ public class TwitchConnect : MonoBehaviour
             //print to unity console for debugging purposes
             print(message);
         }
+
+    }
+    public class TwitchChat : MonoBehaviour
+    {
+        private TcpClient twitchClient;
+        private StreamReader reader;
+        private StreamWriter writer;
+
+        public InputField usernameInput;
+        public InputField channelInput;
+        public InputField oauthInput;
+        public Button connectButton;
+
+        private string username;
+        private string channelName;
+        private string oauthToken;
     }
 }
 
